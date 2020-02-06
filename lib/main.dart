@@ -2,10 +2,25 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:collection/collection.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 
-void main() => runApp(MyApp());
+///runs MyApp and Initalize the code for sending notifications
+void main() {
+//Initalize the code for sending notifications
+  WidgetsFlutterBinding.ensureInitialized();
+  OneSignal.shared.init("ad242baa-2f13-4d13-b062-e56f94e79d2c", iOSSettings: {
+    OSiOSSettings.autoPrompt: false,
+    OSiOSSettings.inAppLaunchUrl: true
+  });
+  OneSignal.shared.setInFocusDisplayType(OSNotificationDisplayType.notification);
+  runApp(MyApp());
+}
 
+/// Creates the root of the app
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -21,61 +36,64 @@ class MyApp extends StatelessWidget {
   }
 }
 
+///Mezzanine page
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
   final String title;
+  MyHomePage({Key key, this.title}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+/// Microcenter page
 class _MyHomePageState extends State<MyHomePage> {
+  Function eq = const ListEquality().equals;
+  List<String> items = List<String>();
+  List<String> tempItems = List<String>();
   String title;
   String url = 'http://youcantblock.me';
+  Map map = {
+    "action": {"microcenter": "update"}
+  };
 
-  void _sendWebhook() {
-    setState(() {
-//      Map example = {'projects': {"projectName": "action", "projectName": "delete", "projectName": "update"}, "debug": "debugInfo"};
-//      TODO have the server script update any new project types when a webhook is sent and write that to a json file
-      Map map = {
-        "action": {"microcenter": "update"}
-      };
-      List<String> litems;
-      apiRequest(url, map).then((s) {
-        var parsedJson = json.decode(s);
-        for (var item in parsedJson) {
-//          litems.add(item);
-          item.toString().split(",").forEach((value) {
-            print(value.replaceAll("{", " ").replaceAll("}", ""));
-          });
-          print("\n");
-        }
-      });
+  ///Grab the json from the server and update items
+  /// and then send a notification when need be
+  void getAPIData() {
+    apiRequest(url, map).then((s) {
+      tempItems = List<String>();
+      var parsedJson = json.decode(s);
+      for (var item in parsedJson) {
+        item.toString().split(",").forEach((value) {
+          var val = value.replaceAll("{", " ").replaceAll("}", "");
+          tempItems.add(val);
+          print(val);
+        });
+        tempItems.add(
+            " 13 : : ______________________________________________________\n");
+      }
+      if (!eq(tempItems, items) && !items.isNotEmpty) {
+        OneSignal();
+        items = tempItems;
+        var notification =
+            OSCreateNotification(content: "There are new microcenter items");
+        var players = List<String>();
+//      the emulater
+        players.add("610dad03-792c-4005-aa37-e80e8bdcb608");
+//      my phone
+        players.add("f965fbba-e53f-406e-b5c4-ee0aa5edd948	");
+        notification.playerIds = players;
+        OneSignal().postNotification(notification);
+      } else if (items.isEmpty) items = tempItems;
     });
   }
 
-  Future sleep1() {
-    return new Future.delayed(const Duration(seconds: 1), () => "1");
-  }
-
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
-
-  Future<File> writeCounter(String s) async {
-    final path = await _localPath;
-    final file = File('$path/jsonReport.json');
-    return file.writeAsString(s);
-  }
-
+  /// Sends the tcp packet to the server and gets the response that has the data
   Future<String> apiRequest(String url, Map jsonMap) async {
     HttpClient httpClient = new HttpClient();
     HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
     request.headers.set('content-type', 'application/json');
     request.add(utf8.encode(json.encode(jsonMap)));
     HttpClientResponse response = await request.close();
-    // todo - you should check the response.statusCode
     String reply = await response.transform(utf8.decoder).join();
     httpClient.close();
     return reply;
@@ -83,6 +101,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    getAPIData();
+//    print(items);
     return Scaffold(
       appBar: AppBar(),
       drawer: Drawer(
@@ -90,61 +110,58 @@ class _MyHomePageState extends State<MyHomePage> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             ListTile(
-              title: Text("Microcenter"),
-              onTap: () {
-                Map map = {
-                  "action": {"microcenter": "update"}
-                };
-                apiRequest(url, map).then((s) {
-                  var parsedJson = json.decode(s);
-                  for (var item in parsedJson) {
-                    item.toString().split(",").forEach((value) {
-                      print(value.replaceAll("{", " ").replaceAll("}", ""));
-                    });
-                    print("\n");
-                  }
-                  Navigator.pop(context);
-                });
-              },
+              title: AutoSizeText(
+                "Microcenter",
+                style: TextStyle(fontSize: 23),
+                minFontSize: 8,
+                maxLines: 2,
+              ),
+              onTap: () {},
             )
           ],
         ),
       ),
-      body: Center(
-        child: Container(
-          margin: EdgeInsets.only(top: 20),
-          child: Column(
-            children: [
-              Text(
-                "asdasdasdasd",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 25,
-                ),
-//                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: PrintData(items: items),
       floatingActionButton: FloatingActionButton(
-      onPressed: _sendWebhook,
-      tooltip: 'send',
-      child: Icon(Icons.add),
-    ), // This trailing comma makes auto-formatting nicer for build methods.
+        onPressed: getAPIData,
+        tooltip: 'send',
+        child: Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
 
-class SecondScreen extends StatelessWidget {
+/// Creates the list of items
+class PrintData extends StatelessWidget {
+  List<String> items = List<String>();
+  RegExp regExp = new RegExp("[0-9]");
+
+  PrintData({this.items});
+
   @override
-  Widget build(BuildContext ctxt) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Multi Page Application Page-1"),
-      ),
-      body: new Text("Another Page...!!!!!!"),
-    );
+  Widget build(BuildContext context) {
+    return Padding(
+        padding: EdgeInsets.all(15.0),
+        child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return Center(
+                  child: (regExp.hasMatch(items[index].split(":")[0]))
+                      ? AutoSizeText(
+                          "${items[index].split(":")[2]}\n",
+                          style: TextStyle(fontSize: 18),
+                          minFontSize: 8,
+                          maxLines: 2,
+                        )
+                      : InkWell(
+                          child: AutoSizeText(
+                            "Link",
+                            style: TextStyle(fontSize: 20),
+                            maxLines: 2,
+                          ),
+                          onTap: () => launch(
+                              "${items[index].split(":")[2]}:${items[index].split(":")[3]}"),
+                        ));
+            }));
   }
 }

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "176525221689",
+    "firebase_url": "https://frontend-bcedd.firebaseio.com",
+    "project_id": "frontend-bcedd",
+    "storage_bucket": "frontend-bcedd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176525221689:android:c24c7ccf5d9c0d8283d2e8",
+        "android_client_info": {
+          "package_name": "me.frontend.youcantblock"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "176525221689-kspvbncf4bbor8dojr6t7oqr75lu5kgg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxduQg7L0Akp4_ZbNIl93clXxJkdb53EA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "176525221689-kspvbncf4bbor8dojr6t7oqr75lu5kgg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
