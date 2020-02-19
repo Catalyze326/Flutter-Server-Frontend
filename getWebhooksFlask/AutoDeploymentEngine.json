@@ -1,0 +1,16 @@
+{
+  "servers": [
+    {
+      "server2": {
+        "actions": [
+          {
+            "start": "git@github.com:Catalyze326/Microcenter-Scraper.git"
+          },
+          {
+            "stop": "git@github.com:Catalyze326/Microcenter-Scraper.git"
+          }
+        ]
+      }
+    }
+  ]
+}
