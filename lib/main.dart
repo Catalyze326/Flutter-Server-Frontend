@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -6,6 +7,8 @@ import 'package:collection/collection.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'globals.dart' as globals;
+import 'package:http/http.dart' as http;
+import "package:threading/threading.dart";
 
 //TODO fix the links
 //TODO make new things come to the top
@@ -62,6 +65,9 @@ class _MainPage extends State<MainPage> {
       case globals.Section.Programs:
         body = Programs();
         break;
+      case globals.Section.AutoDeploy:
+        body = AutoDeploy();
+        break;
     }
     return Scaffold(
       appBar: AppBar(),
@@ -102,6 +108,18 @@ class _MainPage extends State<MainPage> {
               ),
               onTap: () {
                 setState(() => globals.section = globals.Section.Programs);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: AutoSizeText(
+                "AutoDeploy",
+                style: TextStyle(fontSize: 23),
+                minFontSize: 8,
+                maxLines: 1,
+              ),
+              onTap: () {
+                setState(() => globals.section = globals.Section.AutoDeploy);
                 Navigator.pop(context);
               },
             ),
@@ -319,9 +337,10 @@ class _Programs extends State<Programs> {
   }
 
   Widget returnText(String s) {
+    print(s + "\n" + new DateTime.now().millisecondsSinceEpoch.toString());
     try {
       if (int.parse(s.split(".")[0]) >
-          new DateTime.now().millisecondsSinceEpoch - (60 * 1000 * 2)) {
+          new DateTime.now().millisecondsSinceEpoch - (10 * 1000)) {
         return AutoSizeText("Running\n",
             style: TextStyle(color: Colors.green, fontSize: 32));
       } else {
@@ -364,6 +383,156 @@ class _Programs extends State<Programs> {
         tooltip: 'send',
         child: Icon(Icons.get_app),
       ),
+    );
+  }
+}
+
+class AutoDeploy extends StatefulWidget {
+  final String title;
+
+  AutoDeploy({Key key, this.title}) : super(key: key);
+
+  @override
+  _AutoDeploy createState() => _AutoDeploy();
+}
+
+class _AutoDeploy extends State<AutoDeploy> {
+  RegExp regExp = new RegExp("[0-9]");
+  String apiKey = "3a5d14a4ff62db33591960ed69354fdac483c39c";
+  String url = 'http://youcantblock.me';
+  String dropdownValue = ";'ough";
+
+  getAllDeployments() async {
+    setState(() {
+      globals.apiRequest(url, {
+        "action": {"deployments": "update"}
+      }).then((s) {
+        s.split("*").forEach((value) {
+          globals.deployments.add(value);
+        });
+      });
+    });
+  }
+
+  getRepos() async {
+    var res = await http.get(
+        'https://api.github.com/user/repos?access_token=3a5d14a4ff62db33591960ed69354fdac483c39c');
+    if (res.statusCode != 200)
+      throw Exception('get error: statusCode= ${res.statusCode}');
+    print(res.body);
+    var jsonBody = json.decode(res.body);
+    for (var jsonItem in jsonBody)
+      globals.repos.add(jsonItem["name"] + "*" + jsonItem["url"]);
+    print(globals.repos);
+  }
+
+  addAction() {}
+
+  Widget createDeployment(String deploymentName) {
+    getRepos();
+    return (Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        AutoSizeText(
+          deploymentName,
+          style: TextStyle(fontSize: 28),
+          minFontSize: 12,
+          maxLines: 1,
+        ),
+        MyStatefulWidget(key: Key("sadasdasd")),
+      ],
+    ));
+  }
+
+  sendRequest(Map map) {
+    globals.apiRequest(url, map);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    getRepos();
+    print(<String>[].runtimeType);
+    print(globals.deployments);
+    return Scaffold(
+      body: Padding(
+        padding: EdgeInsets.all(15.0),
+        child: globals.deployments.length != 9
+            ? ListView.builder(
+                itemCount: globals.repos.length,
+                itemBuilder: (context, index) {
+                  return (Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      createDeployment("asdasdasd"),
+                    ],
+                  ));
+                })
+            : AutoSizeText(
+                "No deployments yet",
+                style: TextStyle(fontSize: 18),
+                minFontSize: 8,
+                maxLines: 2,
+              ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: getRepos,
+        tooltip: 'send',
+        child: Icon(Icons.get_app),
+      ),
+    );
+  }
+}
+
+class MyStatefulWidget extends StatefulWidget {
+  MyStatefulWidget({Key key}) : super(key: key);
+
+  @override
+  _MyStatefulWidgetState createState() => _MyStatefulWidgetState();
+}
+
+
+class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+  String dropdownValue = 'One';
+
+  getRepos()  {
+    new Thread(() async {
+      var res = await http.get(
+          'https://api.github.com/user/repos?access_token=3a5d14a4ff62db33591960ed69354fdac483c39c');
+      if (res.statusCode != 200)
+        throw Exception('get error: statusCode= ${res.statusCode}');
+      print(res.body);
+      var jsonBody = json.decode(res.body);
+      for (var jsonItem in jsonBody)
+        globals.repos.add(jsonItem["name"] + "*" + jsonItem["url"]);
+      print(globals.repos);
+    }).start();
+}
+
+  @override
+  Widget build(BuildContext context){
+    getRepos();
+    return DropdownButton<String>(
+      value: dropdownValue,
+      icon: Icon(Icons.arrow_downward),
+      iconSize: 24,
+      elevation: 16,
+      style: TextStyle(color: Colors.deepPurple),
+      underline: Container(
+        height: 2,
+        color: Colors.deepPurpleAccent,
+      ),
+      onChanged: (String newValue) {
+        setState(() {
+          dropdownValue = newValue;
+        });
+      },
+      items: globals.repos
+          .map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
     );
   }
 }

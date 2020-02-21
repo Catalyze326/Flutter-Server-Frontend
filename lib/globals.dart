@@ -6,8 +6,10 @@ List<String> items = List<String>();
 List<String> tempItems = List<String>();
 List<String> devices = List<String>();
 List<String> programs = List<String>();
+List<String> deployments = List<String>();
+List<String> repos = List<String>();
+var reposJson;
 Section section;
-
 
 /// Sends the tcp packet to the server and gets the response that has the data
 Future<String> apiRequest(String url, Map jsonMap) async {
@@ -26,4 +28,5 @@ enum Section
   Microcenter,
   AutoStart,
   Programs,
+  AutoDeploy,
 }
