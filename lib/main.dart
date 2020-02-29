@@ -8,6 +8,7 @@ import 'Microcenter.dart';
 import 'AutoDeploy.dart';
 import 'AutoStart.dart';
 import 'Programs.dart';
+import 'ChoseDeployAction.dart';
 
 //TODO fix the links
 //TODO make new things come to the top
@@ -75,6 +76,9 @@ class _AllPages extends State<AllPages> {
         break;
       case globals.Section.AutoDeploy:
         body = AutoDeploy();
+        break;
+      case globals.Section.ChoseDeployAction:
+        body = ChoseDeployAction();
         break;
     }
     return Scaffold(

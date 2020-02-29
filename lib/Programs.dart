@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'globals.dart' as globals;
 
+//TODO fix such that it does not need to be running when the program starts. Prolly set state
+
 class Programs extends StatefulWidget {
   final String title;
 
@@ -29,14 +31,16 @@ class _Programs extends State<Programs> {
   }
 
   sendRequest(Map map) {
-    globals.apiRequest(globals.url, map);
+    setState(() {
+      globals.apiRequest(globals.url, map);
+    });
   }
 
   Widget returnText(String s) {
     print(s + "\n" + new DateTime.now().millisecondsSinceEpoch.toString());
     try {
       if (int.parse(s.split(".")[0]) >
-          new DateTime.now().millisecondsSinceEpoch - (10 * 1000)) {
+          new DateTime.now().millisecondsSinceEpoch - (20 * 1000)) {
         return AutoSizeText("Running\n",
             style: TextStyle(color: Colors.green, fontSize: 32));
       } else {
@@ -58,24 +62,24 @@ class _Programs extends State<Programs> {
         padding: EdgeInsets.all(15.0),
         child: globals.programs.length != 0
             ? ListView.builder(
-            itemCount: globals.programs.length,
-            itemBuilder: (context, index) {
-              return (Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  returnText(globals.programs[index]),
-                ],
-              ));
-            })
+                itemCount: globals.programs.length,
+                itemBuilder: (context, index) {
+                  return (Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      returnText(globals.programs[index]),
+                    ],
+                  ));
+                })
             : AutoSizeText(
-          "No programs yet",
-          style: TextStyle(fontSize: 18),
-          minFontSize: 8,
-          maxLines: 2,
-        ),
+                "No programs yet",
+                style: TextStyle(fontSize: 18),
+                minFontSize: 8,
+                maxLines: 2,
+              ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: getAllPrograms,
+        onPressed: globals.getAllPrograms,
         tooltip: 'send',
         child: Icon(Icons.get_app),
       ),

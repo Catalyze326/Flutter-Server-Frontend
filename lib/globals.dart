@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:convert';
 import 'dart:async';
@@ -11,7 +12,8 @@ List<String> devices = List<String>();
 List<String> programs = List<String>();
 List<String> deployments = List<String>();
 List<String> repos = List<String>();
-var reposJson;
+String activeDeployment = "";
+String activeRepo = "";
 Section section = Section.MainPage;
 
 /// Sends the tcp packet to the server and gets the response that has the data
@@ -53,15 +55,14 @@ getAllPrograms() async {
 }
 
 getAllDeployments() async {
-//  while (deployments.isEmpty) {
   apiRequest(url, {
-    "action": {"deployments": "update"}
+    "action": {"AutoDeploymentEngine": "update"}
   }).then((s) {
-    s.split("*").forEach((value) {
-      deployments.add(value);
-    });
+    for(var serverName in json.decode(s)["servers"]){
+      print((serverName as LinkedHashMap).keys.first);
+      deployments.add((serverName as LinkedHashMap).keys.first);
+    }
   });
-//  }
 }
 
 getAllItems() async {
@@ -110,4 +111,5 @@ enum Section {
   AutoStart,
   Programs,
   AutoDeploy,
+  ChoseDeployAction
 }

@@ -10,6 +10,6 @@ It can grab the data from my microcenter scraper to display that easily in the a
 
 It can let me know if my servers apps are running properly and soon it will be able to restart them.
 
-I am in the process of adding something that will allow it to auto deploy code from my github to servers I have set up. This includes updating, restarting, deploying, and stopping the code.
+It can automatically deploy code to remote servers from my github.
 
 More documentation will be added soon.
